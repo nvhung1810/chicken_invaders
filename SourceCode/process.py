@@ -8,20 +8,20 @@ def create_game(name):
     pygame.init()
     screen = pygame.display.set_mode((1366, 768))
     pygame.display.set_caption(name)
-    pygame.display.set_icon(pygame.image.load('C:/workspace/ChickenInvaders/Data/image/chicken.png'))
+    pygame.display.set_icon(pygame.image.load('/home/hungnv/Desktop/hungnv/chicken_invaders/Data/image/chicken.png'))
     load_music(all_music()['bg'], 0.2).play(-1)
     return screen
 
 
 def w_file(lv_game, lv_gun, score, hp):
     s = [str(lv_game) + '\n', str(lv_gun) + '\n', str(score) + '\n', str(hp) + '\n']
-    with open('C:/workspace/ChickenInvaders/Data/save/save.txt', 'w') as file:
+    with open('/home/hungnv/Desktop/hungnv/chicken_invaders/Data/save/save.txt', 'w') as file:
         file.writelines(s)
 
 
 def r_file():
     x = []
-    with open('C:/workspace/ChickenInvaders/Data/save/save.txt') as file:
+    with open('/home/hungnv/Desktop/hungnv/chicken_invaders/Data/save/save.txt') as file:
         for line in file:
             x.append(int(line.strip()))
     return x
@@ -206,6 +206,37 @@ def move_ck(inf):
         elif inf['pos'][i][0] < 0:
             inf['pos'][i] = (1300, inf['pos'][i][1])
 
+import random
+
+def move_ck_random(inf):
+    for i in range(len(inf['pos'])):
+        # Randomly choose the direction to move (horizontal and vertical)
+        move_x = random.uniform(-1, 1)  # Random move in x direction (-1 to 1)
+        move_y = random.uniform(-1, 1)  # Random move in y direction (-1 to 1)
+
+        # Normalize the direction vector
+        magnitude = (move_x ** 2 + move_y ** 2) ** 0.5
+        move_x /= magnitude
+        move_y /= magnitude
+
+        # Scale the movement to ensure each step moves approximately 200px
+        step_size = 20
+        move_x *= step_size
+        move_y *= step_size
+
+        # Calculate new position
+        current_x, current_y = inf['pos'][i]
+        new_x = current_x + move_x
+        new_y = current_y + move_y
+
+        # Wrap around screen edges
+        screen_width = 1360
+        screen_height = 768
+        new_x %= screen_width
+        new_y %= screen_height
+
+        # Update position
+        inf['pos'][i] = (new_x, new_y)
 
 def move_eggs(inf):
     get_dir = {
@@ -318,12 +349,12 @@ def loop_playing(screen, load=None):
             screen_show_mess(screen, 'YOU WIN')
             pygame.time.delay(3000)
             break
-        
+
         elif count == 0 or hp == 0:
             screen_show_mess(screen, 'YOU LOSE')
             pygame.time.delay(3000)
             if lv_game != 1:
-                remove('C:/workspace/ChickenInvaders/Data/save/save.txt')
+                remove('/home/hungnv/Desktop/hungnv/chicken_invaders/Data/save/save.txt')
             return
 
         # Upgrade Gun
@@ -401,80 +432,199 @@ def loop_playing(screen, load=None):
         screen_show_mess(screen, 'YOU WIN')
     return
 
-import random
+def create_single_chicken(x_pos, y_pos, direct, ck_inf):
+    """
+    Create information for a single chicken.
 
-def solo_mode(screen):
-    pl_inf = player_inf()  # Thông tin về người chơi
-    ck_inf = chicken_inf()  # Thông tin về con gà
-    ls_inf = laser_inf()  # Thông tin về tia laser
-    egg_inf = eg_inf()  # Thông tin về trứng của con gà
+    Parameters:
+        x_pos (int): The x-coordinate of the chicken.
+        y_pos (int): The y-coordinate of the chicken.
+        direct (bool): The direction of the chicken.
+        ck_inf (dict): Dictionary containing information about chickens.
 
-    # Đặt vị trí ban đầu của người chơi và con gà
-    pl_inf['pos'] = [(600, 600)]  # Đặt người chơi ở giữa màn hình dưới cùng
-    ck_inf['pos'] = [(600, 100)]  # Đặt con gà ở giữa màn hình trên cùng
+    Returns:
+        None
+    """
+    ck_inf['pos'].append((x_pos, y_pos))
+    ck_inf['direct'].append(direct)
 
-    # Khởi tạo âm thanh
-    laser_sound = load_music(all_music()['shoot'], 0.05)
-    boom_sound = load_music(all_music()['explode_ck'], 0.05)
-    collision_sound = load_music(all_music()['collision'], 0.05)
+chicken_info = {'pos': [], 'direct': []}
+create_single_chicken(200, 300, False, chicken_info)
 
-    # Kích thước mới cho con gà
-    ck_inf['img'] = pygame.transform.scale(ck_inf['img'], (150, 150))
+def solo_mode(screen, load=None):
+    if load is None:
+        load = [1, 1, 0, 5]
+    lv_game, lv_gun, score, hp = load[0], load[1], load[2], load[3]
+    if lv_game > 1:
+        w_file(lv_game, lv_gun, score, hp)
 
-    # Tốc độ di chuyển của người chơi
-    player_speed = 5
-    movement = None  # Biến để xác định hướng di chuyển của người chơi
+    shoot_time = 0
+    num_ck = 1
+    num_create_ck = 2
+    max_time = 3
+    req_plus_hp = 4
+    min_req_score = 5
+    game = game_level()
 
-    # Tốc độ di chuyển của con gà
+    ray_gun = 1
+    speed_gun = 2
+    req_score_gun = 3
+    gun = gun_level()
+
+    screen_show_mess(screen, f"LEVEL {lv_game}")
+    pygame.time.delay(3000)
+
+    fps = pygame.time.Clock()
+    Max = pygame.display.get_window_size()
+    music = all_music()
+
+    pl_inf = player_inf()
+    ck_inf = chicken_inf()
+    ls_inf = laser_inf()
+    egg_inf = eg_inf()
+    score_inf = sc_inf()
     chicken_speed = 5
 
-    # Hàm để di chuyển con gà mượt màz
+    size_player = pl_inf['img'].get_size()
+    laser_sound = load_music(music['shoot'], 0.05)
+    boom_sound = load_music(music['explode_ck'], 0.05)
+    collision_sound = load_music(music['collision'], 0.05)
+
+    # Tạo chỉ một con gà
+    create_single_chicken(100, 0, False, ck_inf)
+    game[lv_game][num_create_ck] -= 1
+
+    ls_speed = add_event(0, gun[lv_gun][shoot_time])
+    egg_speed = add_event(1, game[lv_game][shoot_time])
+    countdown = add_event(2, 1000)
+
+    count = game[lv_game][max_time]
+    obj = obj_default_playing()
+    plus_hp = False
+
     def smooth_move():
         nonlocal ck_inf
         for i in range(len(ck_inf['pos'])):
-            # Tính toán vị trí mới cho con gà bằng cách thay đổi một lượng nhỏ
-            dx = random.randint(-chicken_speed * 2, chicken_speed * 2)  # Di chuyển ngẫu nhiên theo trục X
-            dy = random.randint(-chicken_speed * 2, chicken_speed * 2)  # Di chuyển ngẫu nhiên theo trục Y
+            dx = random.randint(-chicken_speed * 2, chicken_speed * 2)
+            dy = random.randint(-chicken_speed * 2, chicken_speed * 2)
             new_x = max(0, min(ck_inf['pos'][i][0] + dx, screen.get_width() - ck_inf['img'].get_width()))
             new_y = max(0, min(ck_inf['pos'][i][1] + dy, screen.get_height() - ck_inf['img'].get_height()))
             ck_inf['pos'][i] = (new_x, new_y)
 
-    # Vòng lặp trò chơi
-    running = True
-    while running:
+    while True:
+        fps.tick(60)
+        screen_playing(screen, obj, pl_inf, ck_inf, egg_inf, ls_inf, score_inf, score, hp, count)
+        # Handle event
         for event in pygame.event.get():
+            # Close app
             if event.type == pygame.QUIT:
                 close()
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                    movement = (-1, 0)  # Di chuyển sang trái
-                elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                    movement = (1, 0)  # Di chuyển sang phải
-                elif event.key == pygame.K_UP or event.key == pygame.K_w:
-                    movement = (0, -1)  # Di chuyển lên trên
-                elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                    movement = (0, 1)  # Di chuyển xuống dưới
-                elif event.key == pygame.K_SPACE:
-                    egg_inf['pos'].append((ck_inf['pos'][0][0] + 50, ck_inf['pos'][0][1] + 150))  # Thả trứng từ con gà
-                    laser_sound.play()  # Phát âm thanh bắn laser
-            elif event.type == pygame.KEYUP:
-                movement = None  # Ngừng di chuyển khi người chơi thả nút
+            # Create laser
+            elif event.type == ls_speed:
+                create_laser(gun[lv_gun][ray_gun], ls_inf, pl_inf, laser_sound)
+            # Create egg
+            elif event.type == egg_speed:
+                create_egg(lv_game, egg_inf, ck_inf)
+            elif event.type == countdown:
+                count -= 1
 
-        # Di chuyển người chơi
-        if movement:
-            pl_inf['pos'][0] = (max(0, min(pl_inf['pos'][0][0] + player_speed * movement[0], screen.get_width() - pl_inf['img'].get_width())),
-                                max(0, min(pl_inf['pos'][0][1] + player_speed * movement[1], screen.get_height() - pl_inf['img'].get_height())))
+        if game[lv_game][num_create_ck] > 0 and (len(ck_inf['pos']) == 0 and len(score_inf['pos']) == 0):
+            create_single_chicken(100, 0, False, ck_inf)  # Tạo thêm gà nếu cần
+            game[lv_game][num_create_ck] -= 1
 
-        # Di chuyển con gà mượt mà
-        smooth_move()
+        if score % game[lv_game][req_plus_hp] == 0 and score != 0 and plus_hp is False:
+            hp += 1
+            plus_hp = True
 
-        # Vẽ các đối tượng lên màn hình
-        screen.fill((0, 0, 0))  # Xóa màn hình
-        screen.blit(pl_inf['img'], pl_inf['pos'][0])  # Vẽ người chơi
-        screen.blit(ck_inf['img'], ck_inf['pos'][0])  # Vẽ con gà
-        for pos in ls_inf['pos']:  # Vẽ tia laser
-            pygame.draw.line(screen, (255, 0, 0), pos, (pos[0], pos[1] - 10), 3)  # Vẽ đường thẳng mô phỏng tia laser
+        if (len(ck_inf['pos']) == 0 and len(score_inf['pos']) == 0) or (
+                count == 0 and score >= game[lv_game][min_req_score]):
+            lv_game += 1
+            w_file(lv_game, lv_gun, score, hp)
+            load = [lv_game, lv_gun, score, hp]
+            screen_show_mess(screen, 'YOU WIN')
+            pygame.time.delay(3000)
+            break
 
-        pygame.display.flip()  # Cập nhật màn hình
+        elif count == 0 or hp == 0:
+            screen_show_mess(screen, 'YOU LOSE')
+            pygame.time.delay(3000)
+            if lv_game != 1:
+                remove('/home/hungnv/Desktop/hungnv/chicken_invaders/Data/save/save.txt')
+            return
 
-        pygame.time.Clock().tick(60)  # Giới hạn số lần lặp lại vòng lặp mỗi giây
+        # Upgrade Gun
+        if score >= gun[lv_gun][req_score_gun] and lv_gun < len(gun):
+            lv_gun += 1
+            pygame.time.set_timer(ls_speed, gun[lv_gun][shoot_time])
+
+        # Delete out screen
+        out_screen(ls_inf, Max)
+        out_screen(score_inf, Max)
+        out_screen_egg(lv_game, egg_inf, Max)
+
+        # Move chicken
+        move_ck(ck_inf)
+
+        if lv_game > 3:
+            move_ck(ck_inf)
+            move_eggs(egg_inf)
+        else:
+            move(2, egg_inf)
+        move(- gun[lv_gun][speed_gun], ls_inf)
+        move(1, score_inf)
+
+        # Delete chicken
+        check = collision(ls_inf, ck_inf)
+        if check is not None:
+            boom_sound.play()
+            screen.blit(ck_inf['img_explode'], ck_inf['pos'][check[1]])
+            pygame.display.update()
+            score_inf['pos'].append(ck_inf['pos'][check[1]])
+            ls_inf['pos'].pop(check[0])
+            ck_inf['pos'].pop(check[1])
+            if lv_game > 3:
+                ck_inf['direct'].pop(check[1])
+
+        # Delete Egg
+        check = collision(egg_inf, pl_inf)
+        if check is not None:
+            collision_sound.play()
+            screen.blit(pl_inf['img_explode'], pl_inf['pos'][check[1]])
+            pygame.display.update()
+            pygame.time.delay(20)
+            egg_inf['pos'].pop(check[0])
+            if lv_game > 3:
+                egg_inf['direct'].pop(check[0])
+            hp -= 1
+
+        # Plus Score
+        check = collision(score_inf, pl_inf)
+        if check is not None:
+            score_inf['pos'].pop(check[0])
+            score += 1
+            plus_hp = False
+
+        # Move Player
+        key = pygame.key.get_pressed()
+        pos_x, pos_y = pl_inf['pos'][0]
+        more_max_w = pos_x - pl_inf['move'] > 0
+        less_max_w = pos_x + pl_inf['move'] + size_player[0] <= Max[0]
+        more_half_h = pos_y - pl_inf['move'] > Max[1] // 2
+        less_max_h = pos_y + pl_inf['move'] + size_player[1] <= Max[1]
+        if (key[pygame.K_LEFT] or key[pygame.K_a]) and more_max_w:
+            pl_inf['pos'][0] = change_pos(pl_inf['pos'][0], (-pl_inf['move'], 0))
+        elif (key[pygame.K_RIGHT] or key[pygame.K_d]) and less_max_w:
+            pl_inf['pos'][0] = change_pos(pl_inf['pos'][0], (pl_inf['move'], 0))
+        elif (key[pygame.K_UP] or key[pygame.K_w]) and more_half_h:
+            pl_inf['pos'][0] = change_pos(pl_inf['pos'][0], (0, -pl_inf['move']))
+        elif (key[pygame.K_DOWN] or key[pygame.K_s]) and less_max_h:
+            pl_inf['pos'][0] = change_pos(pl_inf['pos'][0], (0, pl_inf['move']))
+        elif key[pygame.K_ESCAPE]:
+            choose = create_menu(screen, menu_pause())
+            if choose == 2:
+                break
+    if load[0] < len(game):
+        loop_playing(screen, load)
+    else:
+        screen_show_mess(screen, 'YOU WIN')
+    return
