@@ -89,6 +89,13 @@ def menu_load():
         text('New Game', size['font'], 'Yellow', True)
     ]
 
+def menu_reload():
+    size = all_size()
+    return [
+        text('Reload', size['font'], 'Yellow', True),
+        text('New Game', size['font'], 'Yellow', True)
+    ]
+
 
 def menu_pause():
     size = all_size()
@@ -119,7 +126,8 @@ def chicken_inf():
         'img_explode': explode,
         'rect': ck.get_rect(),
         'pos': [],
-        'direct': []
+        'direct': [],
+        'chicken_hp': 5
     }
 
 
