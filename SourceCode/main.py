@@ -9,13 +9,13 @@ def main():
     select_start = create_menu(screen, menu_start())
     while True:
         if select_start == 1:
-            if os.path.exists('C:/workspace/ChickenInvaders/Data/save/save.txt'):
+            if os.path.exists('/home/hungnv/Desktop/hungnv/chicken_invaders/Data/save/save.txt'):
                 select_load = create_menu(screen, menu_load())
                 if select_load == 1:
                     load_inf = r_file()
                     loop_playing(screen, load_inf)
                 elif select_load == 2:
-                    os.remove('C:/workspace/ChickenInvaders/Data/save/save.txt')
+                    os.remove('/home/hungnv/Desktop/hungnv/chicken_invaders/Data/save/save.txt')
                     loop_playing(screen)
             else:
                 loop_playing(screen)
