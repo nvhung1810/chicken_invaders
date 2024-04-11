@@ -8,20 +8,20 @@ def create_game(name):
     pygame.init()
     screen = pygame.display.set_mode((1366, 768))
     pygame.display.set_caption(name)
-    pygame.display.set_icon(pygame.image.load('C:/workspace/ChickenInvaders/Data/image/chicken.png'))
+    pygame.display.set_icon(pygame.image.load('/home/hungnv/Desktop/hungnv/chicken_invaders/Data/image/chicken.png'))
     load_music(all_music()['bg'], 0.2).play(-1)
     return screen
 
 
 def w_file(lv_game, lv_gun, score, hp):
     s = [str(lv_game) + '\n', str(lv_gun) + '\n', str(score) + '\n', str(hp) + '\n']
-    with open('C:/workspace/ChickenInvaders/Data/save/save.txt', 'w') as file:
+    with open('/home/hungnv/Desktop/hungnv/chicken_invaders/Data/save/save.txt', 'w') as file:
         file.writelines(s)
 
 
 def r_file():
     x = []
-    with open('C:/workspace/ChickenInvaders/Data/save/save.txt') as file:
+    with open('/home/hungnv/Desktop/hungnv/chicken_invaders/Data/save/save.txt') as file:
         for line in file:
             x.append(int(line.strip()))
     return x
@@ -348,7 +348,7 @@ def loop_playing(screen, load=None):
             screen_show_mess(screen, 'YOU LOSE')
             pygame.time.delay(3000)
             if lv_game != 1:
-                remove('C:/workspace/ChickenInvaders/Data/save/save.txt')
+                remove('/home/hungnv/Desktop/hungnv/chicken_invaders/Data/save/save.txt')
             return
 
         # Upgrade Gun
@@ -426,38 +426,35 @@ def loop_playing(screen, load=None):
         screen_show_mess(screen, 'YOU WIN')
     return
 
+"""
+    Ham tao ra 1 con ga
+    x_pos la toa do cua con ga
+    ck_inf la thong tin cua con ga
+    direct la huong cua con ga
+"""
 def create_single_chicken(x_pos, direct, ck_inf):
-    """
-    Create information for a single chicken.
-
-    Parameters:
-        direct (bool): The direction of the chicken.
-        ck_inf (dict): Dictionary containing information about chickens.
-
-    Returns:
-        None
-    """
     y_pos = 50
     ck_inf['pos'].append((x_pos, y_pos))
     ck_inf['direct'].append(direct)
 
+"""
+    Ham tao ra man solo 1v1
+"""
 def solo_mode(screen, load=None):
+    """
+        Khai bao cac thong tin
+    """
     if load is None:
         load = [1, 1, 0, 5]
     lv_game, lv_gun, score, hp = load[0], load[1], load[2], load[3]
 
-    chicken_info = {'pos': [], 'direct': []}
-    # create_single_chicken(screen, False, chicken_info)
-
     shoot_time = 0
     num_create_ck = 2
     max_time = 3
-    req_plus_hp = 4
     game = game_level()
 
     ray_gun = 1
     speed_gun = 2
-    req_score_gun = 3
     gun = gun_level()
 
     fps = pygame.time.Clock()
@@ -475,7 +472,7 @@ def solo_mode(screen, load=None):
     laser_sound = load_music(music['shoot'], 0.05)
     boom_sound = load_music(music['explode_ck'], 0.05)
     collision_sound = load_music(music['collision'], 0.05)
-    
+
     # Tạo chỉ một con gà
     create_single_chicken(screen.get_width() // 2, False, ck_inf)
     game[lv_game][num_create_ck] -= 1
@@ -488,9 +485,7 @@ def solo_mode(screen, load=None):
     obj = obj_default_playing()
     plus_hp = False
 
-    # Định nghĩa biến cờ để theo dõi số lượng con gà còn lại
-    chickens_remaining = 1
-
+    # Ham di chuyen con ga
     def smooth_move():
         nonlocal ck_inf
         for i in range(len(ck_inf['pos'])):
@@ -502,10 +497,10 @@ def solo_mode(screen, load=None):
 
             hp_percentage = ck_inf['chicken_hp'] * 20
 
-            font = pygame.font.Font(None, 36)  
-            text = font.render(f"HP: {hp_percentage:.1f}%", True, (255, 255, 255)) 
+            font = pygame.font.Font(None, 36)
+            text = font.render(f"HP: {hp_percentage:.1f}%", True, (255, 255, 255))
             text_rect = text.get_rect(center=(new_x + ck_inf['img'].get_width() // 2, new_y - 20))  # Vị trí của văn bản
-            screen.blit(text, text_rect) 
+            screen.blit(text, text_rect)
 
     while True:
         fps.tick(60)
@@ -525,9 +520,9 @@ def solo_mode(screen, load=None):
                 count -= 1
 
         # Kiểm tra số lượng con gà còn lại
-        chickens_remaining = ck_inf['chicken_hp']
+        chickens_remaining_hp = ck_inf['chicken_hp']
 
-        if chickens_remaining == 0:
+        if chickens_remaining_hp == 0:
             screen_show_mess(screen, 'YOU WIN')
             pygame.display.update()
             pygame.time.delay(2000)
@@ -537,14 +532,9 @@ def solo_mode(screen, load=None):
             screen_show_mess(screen, 'YOU LOSE')
             pygame.time.delay(2000)
             if lv_game != 1:
-                remove('C:/workspace/ChickenInvaders/Data/save/save.txt')
+                remove('/home/hungnv/Desktop/hungnv/chicken_invaders/Data/save/save.txt')
             create_menu(screen, menu_start())
             return
-
-        # Upgrade Gun
-        # if score >= gun[lv_gun][req_score_gun] and lv_gun < len(gun):
-        #     lv_gun += 1
-        #     pygame.time.set_timer(ls_speed, gun[lv_gun][shoot_time])
 
         # Delete out screen
         out_screen(ls_inf, Max)
@@ -559,7 +549,7 @@ def solo_mode(screen, load=None):
         move(- gun[lv_gun][speed_gun], ls_inf)
         move(1, score_inf)
 
-        # Delete chicken
+        # Delete chicken (ban chung con ga)
         check = collision(ls_inf, ck_inf)
         if check is not None:
             boom_sound.play()
@@ -587,7 +577,7 @@ def solo_mode(screen, load=None):
             score += 1
             plus_hp = False
 
-        # Move Player
+        # Move Player (Di chuyen ng dung)
         key = pygame.key.get_pressed()
         pos_x, pos_y = pl_inf['pos'][0]
         more_max_w = pos_x - pl_inf['move'] > 0

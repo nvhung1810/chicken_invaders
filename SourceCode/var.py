@@ -1,8 +1,9 @@
 import pygame
 
+# Trong nay khai bao cac thong tin
 
 def all_img():
-    dir_img = 'C:/workspace/ChickenInvaders/Data/image/'
+    dir_img = '/home/hungnv/Desktop/hungnv/chicken_invaders/Data/image/'
     return {
         'bg': f'{dir_img}background.png',
         'score': f'{dir_img}score.png',
@@ -35,7 +36,7 @@ def all_size():
 
 
 def all_music():
-    dir_music = 'C:/workspace/ChickenInvaders/Data/music/'
+    dir_music = '/home/hungnv/Desktop/hungnv/chicken_invaders/Data/music/'
     return {
         'bg': f'{dir_music}level1.ogg',
         'shoot': f'{dir_music}shoot.wav',
@@ -55,7 +56,7 @@ def all_position():
 
 
 def text(string='Unknown', size=50, color='Yellow', underline=False, bold=False, italic=False, smooth=True):
-    x = pygame.font.Font('C:/workspace/ChickenInvaders/Data/font/VT323-Regular.ttf', size)
+    x = pygame.font.Font('/home/hungnv/Desktop/hungnv/chicken_invaders/Data/font/VT323-Regular.ttf', size)
     x.set_underline(underline)
     x.set_bold(bold)
     x.set_italic(italic)
